@@ -1,6 +1,9 @@
 import argparse
 import json
 from datetime import datetime
+import math
+from mpl_toolkits.basemap import Basemap
+import matplotlib.pyplot as plt
 
 
 def format_location_history(json_file):
@@ -31,6 +34,7 @@ def find_extreme_points(parsed_json):
 	'''write function that automatically finds llcrnrlat, urcrnrlat, llcrnrlon and urcrnrlon'''
 	return 0
 
+
 def calculate_map_boundaries(m):
 	'''calculate map boundaries from that'''
 	return 0
@@ -39,7 +43,7 @@ def calculate_map_boundaries(m):
 def create_map(map_dpi=96):
     '''creates the map'''
     print("Building the map...")
-    plt.figure(figsize=(2600/map_dpi, 1800/my_dpi), dpi=map_dpi)
+    plt.figure(figsize=(2600/map_dpi, 1800/map_dpi), dpi=map_dpi)
     m = Basemap(projection='mill',llcrnrlat=25.1,urcrnrlat=71.5,\
             llcrnrlon=-10.5,urcrnrlon=87.3,resolution='i')
     
