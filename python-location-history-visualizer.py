@@ -4,6 +4,7 @@ from datetime import datetime
 import math
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
+import time
 
 
 def format_location_history(json_file):
@@ -73,7 +74,7 @@ def plot_points(m, info, colorcode_list=None):
 
 def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=96):
     '''creates the map'''
-    print("Building the map...")
+    print("Building the map. This might take an even longer minute...")
     
     plt.figure(figsize=(2600/map_dpi, 1800/map_dpi), dpi=map_dpi)
     m = Basemap(projection='mill',llcrnrlat=llcrnrlat,urcrnrlat=urcrnrlat,\
@@ -94,8 +95,12 @@ def main():
 	arguments = parser.parse_args()
 	loc_hist = format_location_history(arguments.infile[0])
 	check_json_file(loc_hist) # parsed json!
-	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlat = find_border_points(loc_hist)
-	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlat)
+	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = find_border_points(loc_hist)
+	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon)
+
+	name = 'your_map{}.png'.format(str(int(time.time())))
+	plt.savefig(name)
+	print("Done. Saved the map as {}; bye.".format(name))
 
 if __name__ == "__main__":
 	main()
