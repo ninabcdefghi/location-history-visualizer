@@ -33,8 +33,8 @@ def check_json_file(parsed_json):
 
 
 def deg_to_radian(deg):
-    '''converts lats and lons from degree to radian'''
-    deg = deg / 10000000
+    '''converts late7 and lone7 from degree to radian'''
+    deg = deg / 10 ** 7
     return deg * (math.pi / 180.0)
 
 
@@ -42,7 +42,7 @@ def find_border_points(parsed_json):
 	'''returns most extreme latitudes and longitudes. needed for calculation of map'''
 	lats = set([d['latitudeE7'] for d in parsed_json])
 	lons = set([d['longitudeE7'] for d in parsed_json])
-	return deg_to_radian(min(lats)), deg_to_radian(max(lats)), deg_to_radian(min(lons)), deg_to_radian(max(lons))
+	return min(lats) / 10**7, (max(lats)) / 10**7, (min(lons)) / 10**7, (max(lons)) / 10**7
 
 
 def calculate_map_boundaries(m):
@@ -50,12 +50,34 @@ def calculate_map_boundaries(m):
 	return 0
 
 
-def create_map(map_dpi=96):
+def plot_points(m, info, colorcode_list=None):
+    lons = []
+    lats = []
+    
+    for point in info:
+        if not "altitude" in point:
+            continue
+        x, y = m(point['longitudeE7'] / 10**7, point['latitudeE7'] / 10**7)
+        lons.append(x)
+        lats.append(y)
+
+    if not colorcode_list == None: 
+    	plt.scatter(lons, lats, c=colorcode_list, alpha=1.0, zorder=2)
+
+    plt.plot(lons, lats, color='#fee5d9', marker='o', markersize=3, zorder=1)
+
+    # plt.title("choose a title")
+    
+    return plt.show()
+
+
+def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=96):
     '''creates the map'''
     print("Building the map...")
+    
     plt.figure(figsize=(2600/map_dpi, 1800/map_dpi), dpi=map_dpi)
-    m = Basemap(projection='mill',llcrnrlat=25.1,urcrnrlat=71.5,\
-            llcrnrlon=-10.5,urcrnrlon=87.3,resolution='i')
+    m = Basemap(projection='mill',llcrnrlat=llcrnrlat,urcrnrlat=urcrnrlat,\
+            llcrnrlon=llcrnrlon,urcrnrlon=urcrnrlon,resolution='i')
     
     m.shadedrelief()
     m.drawcountries()
@@ -72,9 +94,8 @@ def main():
 	arguments = parser.parse_args()
 	loc_hist = format_location_history(arguments.infile[0])
 	check_json_file(loc_hist) # parsed json!
-	minlat, maxlat, minlon, maxlon = find_border_points(loc_hist)
-	print("minlat: ", minlat, "maxlat: ", maxlat, "minlon: ", minlon, "maxlon: ", maxlon)
-
+	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlat = find_border_points(loc_hist)
+	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlat)
 
 if __name__ == "__main__":
 	main()
