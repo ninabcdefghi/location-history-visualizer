@@ -16,7 +16,9 @@ def format_location_history(json_file):
 	try:
 		parsed_json = parsed_json["locations"] 
 	except:
-		pass
+		print("Sorry, not a valid google location history file! "
+			  "Please download it from google and try again.")
+		exit
 
 	return parsed_json
 
@@ -30,9 +32,11 @@ def check_json_file(parsed_json):
     print("oldest timestamp: {}, newest: {}.".format(oldest, newest))
 
 
-def find_extreme_points(parsed_json):
-	'''write function that automatically finds llcrnrlat, urcrnrlat, llcrnrlon and urcrnrlon'''
-	return 0
+def find_border_points(parsed_json):
+	'''returns most extreme latitudes and longitudes. needed for calculation of map'''
+	lats = set([d['latitudeE7'] for d in parsed_json])
+	lons = set([d['longitudeE7'] for d in parsed_json])
+	return min(lats), max(lats), min(lons), max(lons)
 
 
 def calculate_map_boundaries(m):
@@ -62,6 +66,8 @@ def main():
 	arguments = parser.parse_args()
 	loc_hist = format_location_history(arguments.infile[0])
 	check_json_file(loc_hist) # parsed json!
+	minlat, maxlat, minlon, maxlon = find_border_points(loc_hist)
+	print("minlat: ", minlat, "maxlat: ", maxlat, "minlon: ", minlon, "maxlon: ", maxlon)
 
 
 if __name__ == "__main__":
