@@ -32,11 +32,17 @@ def check_json_file(parsed_json):
     print("oldest timestamp: {}, newest: {}.".format(oldest, newest))
 
 
+def deg_to_radian(deg):
+    '''converts lats and lons from degree to radian'''
+    deg = deg / 10000000
+    return deg * (math.pi / 180.0)
+
+
 def find_border_points(parsed_json):
 	'''returns most extreme latitudes and longitudes. needed for calculation of map'''
 	lats = set([d['latitudeE7'] for d in parsed_json])
 	lons = set([d['longitudeE7'] for d in parsed_json])
-	return min(lats), max(lats), min(lons), max(lons)
+	return deg_to_radian(min(lats)), deg_to_radian(max(lats)), deg_to_radian(min(lons)), deg_to_radian(max(lons))
 
 
 def calculate_map_boundaries(m):
