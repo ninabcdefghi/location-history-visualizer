@@ -5,21 +5,27 @@ import math
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 import time
+import sys
 
 
 def format_location_history(json_file):
 	'''takes any google location history and formats it so its data points can be evaluated'''
 	print("Reading and formatting your location history: This might take a minute...")
-	with open(str(json_file)) as f:
-		parsed_json = f.read()
-		parsed_json = json.loads(parsed_json)
+	try:
+		with open(str(json_file)) as f:
+			parsed_json = f.read()
+			parsed_json = json.loads(parsed_json)
+	except:
+		print("Sorry, not a valid google location history file! "
+			"Please download it from google and try again.")
+		sys.exit(1)
     
 	try:
 		parsed_json = parsed_json["locations"] 
 	except:
 		print("Sorry, not a valid google location history file! "
 			  "Please download it from google and try again.")
-		exit
+		sys.exit(1)
 
 	return parsed_json
 
