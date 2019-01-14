@@ -16,14 +16,14 @@ def format_location_history(json_file):
 			parsed_json = f.read()
 			parsed_json = json.loads(parsed_json)
 	except:
-		print("Sorry, not a valid google location history file! "
+		print("ERROR: Sorry, not a valid google location history file! "
 			"Please download it from google and try again.")
 		sys.exit(1)
     
 	try:
-		parsed_json = parsed_json["locations"] 
+		parsed_json = parsed_json["locations"]
 	except:
-		print("Sorry, not a valid google location history file! "
+		print("ERROR: Sorry, not a valid google location history file! "
 			  "Please download it from google and try again.")
 		sys.exit(1)
 
@@ -34,8 +34,11 @@ def check_json_file(parsed_json):
     '''provides information about the json file used'''
     print("Done! you provided a file with {} data points.".format(len(parsed_json)))
     timestamps = [int(d['timestampMs']) for d in parsed_json]
-    oldest = datetime.fromtimestamp(min(timestamps) / 1000)
-    newest = datetime.fromtimestamp(max(timestamps) / 1000)
+    oldest = datetime.utcfromtimestamp(min(timestamps) / 1000).strftime("%a, %d %b %Y")
+    newest = datetime.utcfromtimestamp(max(timestamps) / 1000).strftime("%a, %d %b %Y")
+    # oldest = time.strftime("%Y-%m-%d", datetime.fromtimestamp(min(timestamps) / 1000))
+    # datetime.fromtimestamp(min(timestamps) / 1000)
+    # newest = datetime.fromtimestamp(max(timestamps) / 1000)
     print("oldest timestamp: {}, newest: {}.".format(oldest, newest))
 
 
