@@ -33,17 +33,16 @@ def format_location_history(json_file):
 def check_json_file(parsed_json):
     '''provides information about the json file used'''
     print("Done! you provided a file with {} data points.".format(len(parsed_json)))
+
     timestamps = [int(d['timestampMs']) for d in parsed_json]
     oldest = datetime.utcfromtimestamp(min(timestamps) / 1000).strftime("%a, %d %b %Y")
     newest = datetime.utcfromtimestamp(max(timestamps) / 1000).strftime("%a, %d %b %Y")
-    # oldest = time.strftime("%Y-%m-%d", datetime.fromtimestamp(min(timestamps) / 1000))
-    # datetime.fromtimestamp(min(timestamps) / 1000)
-    # newest = datetime.fromtimestamp(max(timestamps) / 1000)
+
     print("oldest timestamp: {}, newest: {}.".format(oldest, newest))
 
 
 def deg_to_radian(deg):
-    '''converts late7 and lone7 from degree to radian'''
+    '''converts latE7 and lonE7 from degree to radian'''
     deg = deg / 10 ** 7
     return deg * (math.pi / 180.0)
 
@@ -52,34 +51,52 @@ def find_border_points(parsed_json):
 	'''returns most extreme latitudes and longitudes. needed for calculation of map'''
 	lats = set([d['latitudeE7'] for d in parsed_json])
 	lons = set([d['longitudeE7'] for d in parsed_json])
+
 	return min(lats) / 10**7, (max(lats)) / 10**7, (min(lons)) / 10**7, (max(lons)) / 10**7
 
 
 def calculate_map_boundaries(m):
-	'''calculate map boundaries from that'''
+	'''calculate map boundaries from that: provide space 10% from most extreme points'''
 	return 0
 
 
-def plot_points(m, info, colorcode_list=None):
-    lons = []
-    lats = []
+def plot_points(m, info, colorcode_list=None, csv=None, title="Your Location History"):
+	lons = []
+	lats = []
+
+	print("Almost done: Plotting the points...")
     
-    for point in info:
-        if not "altitude" in point:
-            continue
-        x, y = m(point['longitudeE7'] / 10**7, point['latitudeE7'] / 10**7)
-        lons.append(x)
-        lats.append(y)
+	for point in info:
+		if not "altitude" in point:
+			continue
+		x, y = m(point['longitudeE7'] / 10**7, point['latitudeE7'] / 10**7)
+		lons.append(x)
+		lats.append(y)
 
-    if not colorcode_list == None: 
-    	plt.scatter(lons, lats, c=colorcode_list, alpha=1.0, zorder=2)
+	if csv:
+		manlats, manlons = add_from_csv(csv)
+		manlats, manlons = m(manlons, manlats)
+		manlats.append(lats)
+		manlons.append(lons)
+		print(lats[-100:])
 
-    plt.plot(lons, lats, color='#fee5d9', marker='o', markersize=3, zorder=1)
+	if not colorcode_list:
+		plt.scatter(lons, lats, c=colorcode_list, alpha=1.0, zorder=2)
 
-    # plt.title("choose a title")
+	plt.plot(lons, lats, color=(0, 0, 0, 0.5), marker='o', markersize=1.5, zorder=1)
+	plt.title(title)
     
-    return plt.show()
+	return plt
 
+def add_from_csv(csv):
+	lats = []
+	lons = []
+	with open(csv) as f:
+		for data in f.readlines():
+			coords = list(map(float, data.strip().split(",")))
+			lats.append(coords[0])
+			lons.append(coords[1])
+	return lats, lons
 
 def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=96):
     '''creates the map'''
@@ -96,7 +113,6 @@ def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=96):
     
     return m
 
-
 def main():
 	parser = argparse.ArgumentParser(description="Enter your json file.")
 	parser.add_argument('--infile', nargs=1, type=str)
@@ -106,6 +122,8 @@ def main():
 	check_json_file(loc_hist) # parsed json!
 	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = find_border_points(loc_hist)
 	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon)
+
+	plot_points(m, loc_hist, csv="man.csv")
 
 	name = 'your_map{}.png'.format(str(int(time.time())))
 	plt.savefig(name)
