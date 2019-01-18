@@ -39,13 +39,7 @@ def check_json_file(parsed_json):
     newest = datetime.utcfromtimestamp(max(timestamps) / 1000).strftime("%a, %d %b %Y")
 
     print("oldest timestamp: {}, newest: {}.".format(oldest, newest))
-
-
-def deg_to_radian(deg):
-    '''converts latE7 and lonE7 from degree to radian'''
-    deg = deg / 10 ** 7
-    return deg * (math.pi / 180.0)
-
+    
 
 def find_border_points(parsed_json):
 	'''returns most extreme latitudes and longitudes. needed for calculation of map'''
@@ -76,8 +70,10 @@ def plot_points(m, info, colorcode_list=None, csv=None, title="Your Location His
 	if csv:
 		manlats, manlons = add_from_csv(csv)
 		manlats, manlons = m(manlons, manlats)
-		manlats.append(lats)
-		manlons.append(lons)
+		print(type(manlons))
+		print(type(manlons[0]))
+		[lats.append(manlat) for manlat in manlons]
+		[lons.append(manlon) for manlon in manlats]
 		print(lats[-100:])
 
 	if not colorcode_list:
