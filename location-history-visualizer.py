@@ -10,7 +10,7 @@ import sys
 
 def format_location_history(json_file):
 	'''takes any google location history and formats it so its data points can be evaluated'''
-	print("Reading and formatting your location history: This might take a minute...")
+	print("Reading and formatting your location history...")
 	try:
 		with open(str(json_file)) as f:
 			parsed_json = f.read()
@@ -39,7 +39,7 @@ def check_json_file(parsed_json):
     newest = datetime.utcfromtimestamp(max(timestamps) / 1000).strftime("%a, %d %b %Y")
 
     print("oldest timestamp: {}, newest: {}.".format(oldest, newest))
-    
+
 
 def find_border_points(parsed_json):
 	'''returns most extreme latitudes and longitudes. needed for calculation of map'''
@@ -49,12 +49,22 @@ def find_border_points(parsed_json):
 	return min(lats) / 10**7, (max(lats)) / 10**7, (min(lons)) / 10**7, (max(lons)) / 10**7
 
 
-def calculate_map_boundaries(m):
-	'''calculate map boundaries from that: provide space 10% from most extreme points'''
-	return 0
+def calculate_map_boundaries(parsed_json):
+	'''calculate map boundaries with some space around the most extreme points'''
+	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = find_border_points(parsed_json)
+	
+	add_to_lat = abs(llcrnrlat - urcrnrlat) / 20
+	add_to_lon = abs(llcrnrlon - urcrnrlon) / 20
+
+	llcrnrlat = llcrnrlat - add_to_lat
+	urcrnrlat = urcrnrlat + add_to_lat
+	llcrnrlon = llcrnrlon - add_to_lon
+	urcrnrlon = urcrnrlon + add_to_lon
+
+	return llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon
 
 
-def plot_points(m, info, colorcode_list=None, csv=None, title="Your Location History"):
+def plot_points(m, info, colorcode_list=None, title="Your Location History"):
 	lons = []
 	lats = []
 
@@ -67,40 +77,22 @@ def plot_points(m, info, colorcode_list=None, csv=None, title="Your Location His
 		lons.append(x)
 		lats.append(y)
 
-	if csv:
-		manlats, manlons = add_from_csv(csv)
-		manlats, manlons = m(manlons, manlats)
-		print(type(manlons))
-		print(type(manlons[0]))
-		[lats.append(manlat) for manlat in manlons]
-		[lons.append(manlon) for manlon in manlats]
-		print(lats[-100:])
+	#if not colorcode_list:
+	#	plt.scatter(lons, lats, c=colorcode_list, alpha=1.0, zorder=2)
 
-	if not colorcode_list:
-		plt.scatter(lons, lats, c=colorcode_list, alpha=1.0, zorder=2)
-
-	plt.plot(lons, lats, color=(0, 0, 0, 0.5), marker='o', markersize=1.5, zorder=1)
+	plt.plot(lons, lats, color=(0, 0, 0, 0.5), marker='o', markersize=2, zorder=1)
 	plt.title(title)
     
 	return plt
 
-def add_from_csv(csv):
-	lats = []
-	lons = []
-	with open(csv) as f:
-		for data in f.readlines():
-			coords = list(map(float, data.strip().split(",")))
-			lats.append(coords[0])
-			lons.append(coords[1])
-	return lats, lons
 
 def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=96):
     '''creates the map'''
-    print("Building the map. This might take an even longer minute...")
+    print("Building the map. This might take a minute...")
     
     plt.figure(figsize=(2600/map_dpi, 1800/map_dpi), dpi=map_dpi)
-    m = Basemap(projection='mill',llcrnrlat=llcrnrlat,urcrnrlat=urcrnrlat,\
-            llcrnrlon=llcrnrlon,urcrnrlon=urcrnrlon,resolution='i')
+    m = Basemap(projection='mill', llcrnrlat=llcrnrlat, urcrnrlat=urcrnrlat, \
+            llcrnrlon=llcrnrlon, urcrnrlon=urcrnrlon, resolution='i')
     
     m.shadedrelief()
     m.drawcountries()
@@ -109,21 +101,24 @@ def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=96):
     
     return m
 
+
 def main():
 	parser = argparse.ArgumentParser(description="Enter your json file.")
 	parser.add_argument('--infile', nargs=1, type=str)
 	parser.add_argument("-alt", "--altitude_marker", default=False)
 	arguments = parser.parse_args()
+	
 	loc_hist = format_location_history(arguments.infile[0])
-	check_json_file(loc_hist) # parsed json!
-	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = find_border_points(loc_hist)
-	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon)
+	check_json_file(loc_hist)
 
-	plot_points(m, loc_hist, csv="man.csv")
+	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = calculate_map_boundaries(loc_hist)
+	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon)
+	plot_points(m, loc_hist)
 
 	name = 'your_map{}.png'.format(str(int(time.time())))
 	plt.savefig(name)
 	print("Done. Saved the map as {}; bye.".format(name))
+
 
 if __name__ == "__main__":
 	main()
