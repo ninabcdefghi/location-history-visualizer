@@ -1,7 +1,6 @@
 import argparse
 import json
 from datetime import datetime
-import math
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 import time
@@ -56,10 +55,13 @@ def calculate_map_boundaries(parsed_json):
 	add_to_lat = abs(llcrnrlat - urcrnrlat) / 20
 	add_to_lon = abs(llcrnrlon - urcrnrlon) / 20
 
-	llcrnrlat = llcrnrlat - add_to_lat
-	urcrnrlat = urcrnrlat + add_to_lat
-	llcrnrlon = llcrnrlon - add_to_lon
-	urcrnrlon = urcrnrlon + add_to_lon
+	# corrects lower end's scaling difference
+	lower_lat_scale_correct = 1.9
+
+	llcrnrlat -= (add_to_lat * lower_lat_scale_correct)
+	urcrnrlat += add_to_lat
+	llcrnrlon -= add_to_lon
+	urcrnrlon += add_to_lon
 
 	return llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon
 
@@ -77,23 +79,21 @@ def plot_points(m, info, colorcode_list=None, title="Your Location History"):
 		lons.append(x)
 		lats.append(y)
 
-	#if not colorcode_list:
-	#	plt.scatter(lons, lats, c=colorcode_list, alpha=1.0, zorder=2)
-
-	plt.plot(lons, lats, color=(0, 0, 0, 0.5), marker='o', markersize=2, zorder=1)
+	black = (0, 0, 0, 0.5)
+	plt.plot(lons, lats, color=black, marker='o', markersize=2, zorder=1)
 	plt.title(title)
     
 	return plt
 
 
-def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=96):
+def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=200):
     '''creates the map'''
     print("Building the map. This might take a minute...")
     
-    plt.figure(figsize=(2600/map_dpi, 1800/map_dpi), dpi=map_dpi)
+    plt.figure(figsize=(5980/map_dpi, 4140/map_dpi), dpi=map_dpi)
     m = Basemap(projection='mill', llcrnrlat=llcrnrlat, urcrnrlat=urcrnrlat, \
-            llcrnrlon=llcrnrlon, urcrnrlon=urcrnrlon, resolution='i')
-    
+            llcrnrlon=llcrnrlon, urcrnrlon=urcrnrlon, resolution='f')
+
     m.shadedrelief()
     m.drawcountries()
     m.fillcontinents(color='#04BAE3', lake_color='#FFFFFF', zorder=0)
@@ -105,9 +105,10 @@ def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=96):
 def main():
 	parser = argparse.ArgumentParser(description="Enter your json file.")
 	parser.add_argument('--infile', nargs=1, type=str)
-	parser.add_argument("-alt", "--altitude_marker", default=False)
+	parser.add_argument("-from", nargs=1, type=str, default=False)
+	parser.add_argument("-to", nargs=1, type=str, default=False)
 	arguments = parser.parse_args()
-	
+
 	loc_hist = format_location_history(arguments.infile[0])
 	check_json_file(loc_hist)
 
