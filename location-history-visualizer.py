@@ -8,8 +8,9 @@ import sys
 
 
 def format_location_history(json_file):
-	'''takes any google location history and formats it so its data points can be evaluated'''
+	'''takes location history as downloaded from google and formats it so its data points can be evaluated'''
 	print("Reading and formatting your location history...")
+	
 	try:
 		with open(str(json_file)) as f:
 			parsed_json = f.read()
@@ -34,19 +35,24 @@ def check_json_file(parsed_json):
     print("Done! you provided a file with {} data points.".format(len(parsed_json)))
 
     timestamps = [int(d['timestampMs']) for d in parsed_json]
-    oldest = datetime.utcfromtimestamp(min(timestamps) / 1000).strftime("%a, %d %b %Y")
-    newest = datetime.utcfromtimestamp(max(timestamps) / 1000).strftime("%a, %d %b %Y")
+    oldest = min(timestamps)
+    newest = max(timestamps)
 
-    print("oldest timestamp: {}, newest: {}.".format(oldest, newest))
+    oldest_utc = datetime.utcfromtimestamp(oldest / 1000).strftime("%a, %d %b %Y")
+    newest_utc = datetime.utcfromtimestamp(newest / 1000).strftime("%a, %d %b %Y")
+
+    print("oldest timestamp: {}, newest: {}.".format(oldest_utc, newest_utc))
     return oldest, newest
 
 
 def select_from_dates(parsed_json, oldest_timestamp, newest_timestamp, start=False, end=False):
 	'''selects relevant datapoints in case start and/or end date are provided'''
-	if not end:
-		end = oldest_timestamp
+	
 	if not start:
-		start = newest_timestamp
+		start = oldest_timestamp
+	if not end:
+		end = newest_timestamp
+		print(end)
 
 	parsed_dated_json = [e for e in parsed_json if int(e["timestampMs"]) >= start]
 	parsed_dated_json = [e for e in parsed_dated_json if int(e["timestampMs"]) <= end]
@@ -100,7 +106,7 @@ def plot_points(m, info, colorcode_list=None, title="Your Location History"):
 	return plt
 
 
-def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=200):
+def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=300):
     '''creates the map'''
     print("Building the map. This might take a minute...")
     
@@ -119,8 +125,11 @@ def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=200):
 
 def valid_date(s):
 	try:
-		return int(time.mktime(datetime.strptime(s, "%Y-%m-%d").timetuple()) * 1000)
-		#datetime.strptime(s, "%Y-%m-%d")
+		stamp = int(time.mktime(datetime.strptime(s, "%Y-%m-%d").timetuple()) * 1000)
+		if len(str(stamp)) != 13:
+			msg = "ERROR: Cannot convert {} to unix timestamp.".format(s)
+			raise argparse.ArgumentTypeError(msg)
+		return stamp
 	except ValueError:
 		msg = "Not a valid date: '{0}'.".format(s)
 		raise argparse.ArgumentTypeError(msg)
@@ -128,25 +137,34 @@ def valid_date(s):
 def main():
 	parser = argparse.ArgumentParser(description="Enter your json file.")
 	parser.add_argument("-i", "--infile", nargs=1, type=str)
-	parser.add_argument("-s", "--startdate", help="Start Date - format YYYY-MM-DD", nargs=1, type=valid_date, default=False)
-	parser.add_argument("-e", "--enddate", help="End Date - format YYYY-MM-DD", nargs=1, type=valid_date, default=False)
+	parser.add_argument("-s", "--startdate", help="Start Date - format YYYY-MM-DD", nargs=1, 
+						type=valid_date, default=False)
+	parser.add_argument("-e", "--enddate", help="End Date - format YYYY-MM-DD", nargs=1, 
+						type=valid_date, default=False)
 	arguments = parser.parse_args()
-
-	#print(arguments.startdate[0])
-	#print(arguments.enddate[0])
-
 
 	loc_hist = format_location_history(arguments.infile[0])
 	oldest_timestamp, newest_timestamp = check_json_file(loc_hist)
 
-	if arguments.startdate or arguments.enddate:
+
+	if arguments.startdate:
 		startdate = arguments.startdate[0]
+	else:
+		startdate = int(oldest_timestamp)
+
+	if arguments.enddate:
 		enddate = arguments.enddate[0]
-		loc_hist = select_from_dates(loc_hist, oldest_timestamp, newest_timestamp, start=startdate, end=enddate)
+	else:
+		enddate = int(newest_timestamp)
+
+	if startdate != oldest_timestamp or enddate != newest_timestamp:
+		loc_hist = select_from_dates(loc_hist, oldest_timestamp, newest_timestamp, 
+									 start=startdate, end=enddate)
+
 
 	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = calculate_map_boundaries(loc_hist)
 	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon)
-	plot_points(m, loc_hist)
+	plot_points(m, loc_hist)	
 
 	name = 'your_map{}.png'.format(str(int(time.time())))
 	plt.savefig(name)
