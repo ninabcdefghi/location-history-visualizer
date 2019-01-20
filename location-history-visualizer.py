@@ -8,9 +8,10 @@ import sys
 
 
 def format_location_history(json_file):
-	'''takes location history as downloaded from google and formats it so its data points can be evaluated'''
+	'''takes location history as downloaded from google and formats it
+	so its data points can be evaluated'''
 	print("Reading and formatting your location history...")
-	
+
 	try:
 		with open(str(json_file)) as f:
 			parsed_json = f.read()
@@ -65,15 +66,23 @@ def find_border_points(parsed_json):
 	lats = set([d['latitudeE7'] for d in parsed_json])
 	lons = set([d['longitudeE7'] for d in parsed_json])
 
-	return min(lats) / 10**7, (max(lats)) / 10**7, (min(lons)) / 10**7, (max(lons)) / 10**7 #besser machen
+	minlat = min(lats) / 10**7
+	maxlat = max(lats) / 10**7
+	minlon = min(lons) / 10**7
+	maxlon = max(lons) / 10**7
+
+	return minlat, maxlat, minlon, maxlon
 
 
 def calculate_map_boundaries(parsed_json):
 	'''calculate map boundaries with some space around the most extreme points'''
 	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = find_border_points(parsed_json)
 	
-	add_to_lat = abs(llcrnrlat - urcrnrlat) / 20
-	add_to_lon = abs(llcrnrlon - urcrnrlon) / 20
+	# determines how many percent of map is shown in addition to extreme points 
+	padding = 0.05
+
+	add_to_lat = abs(llcrnrlat - urcrnrlat) * padding
+	add_to_lon = abs(llcrnrlon - urcrnrlon) * padding
 
 	# corrects lower end's scaling difference
 	lower_lat_scale_correct = 1.9
@@ -122,7 +131,6 @@ def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=300):
     return m
 
 
-
 def valid_date(s):
 	try:
 		stamp = int(time.mktime(datetime.strptime(s, "%Y-%m-%d").timetuple()) * 1000)
@@ -135,12 +143,19 @@ def valid_date(s):
 		raise argparse.ArgumentTypeError(msg)
 
 def main():
-	parser = argparse.ArgumentParser(description="Enter your json file.")
-	parser.add_argument("-i", "--infile", nargs=1, type=str)
+	parser = argparse.ArgumentParser(description=("Location History Visualizer: "
+									"Creates simple maps from google location history."))
+	parser.add_argument("-i", "--infile", nargs=1, type=str, required=True, 
+						help=("Enter the name or path of the json file downloaded "
+							"from google takeout, e.g. 'Location_History.json'."))
 	parser.add_argument("-s", "--startdate", help="Start Date - format YYYY-MM-DD", nargs=1, 
 						type=valid_date, default=False)
 	parser.add_argument("-e", "--enddate", help="End Date - format YYYY-MM-DD", nargs=1, 
 						type=valid_date, default=False)
+	parser.add_argument("-t", "--title", help="Enter a title for your map.", type=str, 
+						default=False)
+	parser.add_argument("-w", "--width", help="Width of your map in pixels. Enter an integer",
+						type=int, default=False) # make it work!
 	arguments = parser.parse_args()
 
 	loc_hist = format_location_history(arguments.infile[0])
