@@ -38,6 +38,20 @@ def check_json_file(parsed_json):
     newest = datetime.utcfromtimestamp(max(timestamps) / 1000).strftime("%a, %d %b %Y")
 
     print("oldest timestamp: {}, newest: {}.".format(oldest, newest))
+    return oldest, newest
+
+
+def select_from_dates(parsed_json, oldest_timestamp, newest_timestamp, start=False, end=False):
+	'''selects relevant datapoints in case start and/or end date are provided'''
+	if not end:
+		end = oldest_timestamp
+	if not start:
+		start = newest_timestamp
+
+	parsed_dated_json = [e for e in parsed_json if int(e["timestampMs"]) >= start]
+	parsed_dated_json = [e for e in parsed_dated_json if int(e["timestampMs"]) <= end]
+
+	return parsed_dated_json
 
 
 def find_border_points(parsed_json):
@@ -45,7 +59,7 @@ def find_border_points(parsed_json):
 	lats = set([d['latitudeE7'] for d in parsed_json])
 	lons = set([d['longitudeE7'] for d in parsed_json])
 
-	return min(lats) / 10**7, (max(lats)) / 10**7, (min(lons)) / 10**7, (max(lons)) / 10**7
+	return min(lats) / 10**7, (max(lats)) / 10**7, (min(lons)) / 10**7, (max(lons)) / 10**7 #besser machen
 
 
 def calculate_map_boundaries(parsed_json):
@@ -102,15 +116,33 @@ def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=200):
     return m
 
 
+
+def valid_date(s):
+	try:
+		return int(time.mktime(datetime.strptime(s, "%Y-%m-%d").timetuple()) * 1000)
+		#datetime.strptime(s, "%Y-%m-%d")
+	except ValueError:
+		msg = "Not a valid date: '{0}'.".format(s)
+		raise argparse.ArgumentTypeError(msg)
+
 def main():
 	parser = argparse.ArgumentParser(description="Enter your json file.")
-	parser.add_argument('--infile', nargs=1, type=str)
-	parser.add_argument("-from", nargs=1, type=str, default=False)
-	parser.add_argument("-to", nargs=1, type=str, default=False)
+	parser.add_argument("-i", "--infile", nargs=1, type=str)
+	parser.add_argument("-s", "--startdate", help="Start Date - format YYYY-MM-DD", nargs=1, type=valid_date, default=False)
+	parser.add_argument("-e", "--enddate", help="End Date - format YYYY-MM-DD", nargs=1, type=valid_date, default=False)
 	arguments = parser.parse_args()
 
+	#print(arguments.startdate[0])
+	#print(arguments.enddate[0])
+
+
 	loc_hist = format_location_history(arguments.infile[0])
-	check_json_file(loc_hist)
+	oldest_timestamp, newest_timestamp = check_json_file(loc_hist)
+
+	if arguments.startdate or arguments.enddate:
+		startdate = arguments.startdate[0]
+		enddate = arguments.enddate[0]
+		loc_hist = select_from_dates(loc_hist, oldest_timestamp, newest_timestamp, start=startdate, end=enddate)
 
 	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = calculate_map_boundaries(loc_hist)
 	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon)
