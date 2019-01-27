@@ -96,7 +96,13 @@ def calculate_map_boundaries(parsed_json):
 	return llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon
 
 
-def plot_points(m, info, colorcode_list=None, title="Your Location History"):
+def choose_plot_color(relief_bool):
+	if relief_bool:
+		return (0, 0, 0, 0.5)
+	return (0.93, 0.16, 0.22, 0.5)
+
+
+def plot_points(m, info, relief_bool, colorcode_list=None, title="Your Location History"):
 	lons = []
 	lats = []
 
@@ -109,24 +115,34 @@ def plot_points(m, info, colorcode_list=None, title="Your Location History"):
 		lons.append(x)
 		lats.append(y)
 
-	black = (0, 0, 0, 0.5)
-	plt.plot(lons, lats, color=black, marker='o', markersize=2, zorder=1)
+	plot_col = choose_plot_color(relief_bool)
+	plt.plot(lons, lats, color=plot_col, marker='o', markersize=2, zorder=1)
 	plt.title(title)
     
 	return plt
 
 
-def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, width, map_dpi=300):
+def choose_border_color(relief_bool):
+	if relief_bool:
+		return (0, 0, 0, 0.5)
+	return (0.816, 0.816, 0.816)
+
+
+def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, relief_bool, width, map_dpi=300):
     '''creates the map'''
     print("Building the map. This might take a minute...")
     
     plt.figure(figsize=(width/map_dpi, (width * 0.69)/map_dpi), dpi=map_dpi)
     m = Basemap(projection='mill', llcrnrlat=llcrnrlat, urcrnrlat=urcrnrlat, \
-            llcrnrlon=llcrnrlon, urcrnrlon=urcrnrlon, width=width, resolution='l')
+            llcrnrlon=llcrnrlon, urcrnrlon=urcrnrlon, resolution='l')
 
-    m.shadedrelief()
-    m.drawcountries()
-    m.fillcontinents(color='#04BAE3', lake_color='#FFFFFF', zorder=0)
+    if relief_bool:
+    	m.shadedrelief()
+
+    country_col = choose_border_color(relief_bool)
+    m.drawcountries(color=country_col)
+
+    m.fillcontinents(color=(0.972, 0.972, 0.972), lake_color='#FFFFFF', zorder=0)
     m.drawmapboundary(fill_color='#FFFFFF')
     
     return m
@@ -149,6 +165,7 @@ def valid_date(s):
 def main():
 	parser = argparse.ArgumentParser(description=("Location History Visualizer: "
 									"Creates simple maps from google location history."))
+
 	parser.add_argument("-i", "--infile", nargs=1, type=str, required=True, 
 						help=("Enter the name or path of the json file downloaded "
 							"from google takeout, e.g. 'Location_History.json'."))
@@ -160,7 +177,10 @@ def main():
 						default=False)
 	parser.add_argument("-w", "--width", help="Width of your map in pixels. Enter an integer",
 						type=int, default=6000) # make it work!
+	parser.add_argument("-r", "--relief", help="Type 'True' if you want your map to show landscape features.",
+						type=bool, default=False)
 	arguments = parser.parse_args()
+
 
 	loc_hist = format_location_history(arguments.infile[0])
 	oldest_timestamp, newest_timestamp = check_json_file(loc_hist)
@@ -183,8 +203,10 @@ def main():
 
 	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = calculate_map_boundaries(loc_hist)
 	
-	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, width=arguments.width)
-	plot_points(m, loc_hist)	
+	## make layout here
+
+	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, arguments.relief, width=arguments.width)
+	plot_points(m, loc_hist, arguments.relief)
 
 	name = 'your_map{}.png'.format(str(int(time.time())))
 	plt.savefig(name)
