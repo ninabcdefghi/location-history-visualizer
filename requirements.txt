@@ -1,7 +1,2 @@
-mpl_toolkits.basemap
-matplotlib.pyplot
-json
-datetime
-argparse
-time
-sys
+matplotlib
+basemap
