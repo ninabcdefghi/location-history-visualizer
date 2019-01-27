@@ -1,5 +1,5 @@
 # Location History Visualizer
-Simple Python CLI tool enabling anyone to visualize the location data that google maps collects - most likely [whether you want it or not](https://www.independent.co.uk/news/world/americas/google-location-data-privacy-android-sundar-pichai-a8490636.html).
+Simple Python CLI tool enabling anyone to visualize the location history that google maps collects - data most likely being collected [whether you want it or not](https://www.independent.co.uk/news/world/americas/google-location-data-privacy-android-sundar-pichai-a8490636.html).
 
 <img src="/outputexamples/basic_example.jpg" alt="output preview_basic" width="350" height="252"> <img src="/outputexamples/relief_example.jpg" alt="output preview_relief" width="350" height="252">
 
@@ -20,6 +20,6 @@ pip install -r requirements.txt
 - Title: `-t CHOOSE TITLE` gives your map a custom title.
 
 # Output
-The map can be used to [create detailes relief](/outputexamples/relief_big.jpg) or [schematic maps of your entire data](/outputexamples/basic_big.jpg) and to [visualize itineraries](/outputexamples/reliefdetail3.jpg).
+The map can be used to [create detailed relief](/outputexamples/relief_big.jpg) or [schematic maps of your entire data](/outputexamples/basic_big.jpg) and to [visualize itineraries](/outputexamples/reliefdetail3.jpg).
 
 ![relief_big](/outputexamples/reliefdetail2.jpg)
