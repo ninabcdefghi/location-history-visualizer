@@ -115,13 +115,13 @@ def plot_points(m, info, colorcode_list=None, title="Your Location History"):
 	return plt
 
 
-def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, map_dpi=300):
+def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, width, map_dpi=300):
     '''creates the map'''
     print("Building the map. This might take a minute...")
     
-    plt.figure(figsize=(5980/map_dpi, 4140/map_dpi), dpi=map_dpi)
+    plt.figure(figsize=(width/map_dpi, (width * 0.69)/map_dpi), dpi=map_dpi)
     m = Basemap(projection='mill', llcrnrlat=llcrnrlat, urcrnrlat=urcrnrlat, \
-            llcrnrlon=llcrnrlon, urcrnrlon=urcrnrlon, resolution='f')
+            llcrnrlon=llcrnrlon, urcrnrlon=urcrnrlon, width=width, resolution='l')
 
     m.shadedrelief()
     m.drawcountries()
@@ -155,7 +155,7 @@ def main():
 	parser.add_argument("-t", "--title", help="Enter a title for your map.", type=str, 
 						default=False)
 	parser.add_argument("-w", "--width", help="Width of your map in pixels. Enter an integer",
-						type=int, default=False) # make it work!
+						type=int, default=6000) # make it work!
 	arguments = parser.parse_args()
 
 	loc_hist = format_location_history(arguments.infile[0])
@@ -178,7 +178,7 @@ def main():
 
 
 	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = calculate_map_boundaries(loc_hist)
-	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon)
+	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, width=arguments.width)
 	plot_points(m, loc_hist)	
 
 	name = 'your_map{}.png'.format(str(int(time.time())))
