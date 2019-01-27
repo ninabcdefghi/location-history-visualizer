@@ -36,6 +36,7 @@ def check_json_file(parsed_json):
     print("Done! you provided a file with {} data points.".format(len(parsed_json)))
 
     timestamps = [int(d['timestampMs']) for d in parsed_json]
+
     oldest = min(timestamps)
     newest = max(timestamps)
 
@@ -132,15 +133,18 @@ def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, width, map_dpi=300):
 
 
 def valid_date(s):
+	'''raises error if optionally entered dates are not in a format the script can interpret'''
 	try:
 		stamp = int(time.mktime(datetime.strptime(s, "%Y-%m-%d").timetuple()) * 1000)
 		if len(str(stamp)) != 13:
 			msg = "ERROR: Cannot convert {} to unix timestamp.".format(s)
 			raise argparse.ArgumentTypeError(msg)
 		return stamp
+
 	except ValueError:
 		msg = "Not a valid date: '{0}'.".format(s)
 		raise argparse.ArgumentTypeError(msg)
+
 
 def main():
 	parser = argparse.ArgumentParser(description=("Location History Visualizer: "
@@ -178,6 +182,7 @@ def main():
 
 
 	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = calculate_map_boundaries(loc_hist)
+	
 	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, width=arguments.width)
 	plot_points(m, loc_hist)	
 
