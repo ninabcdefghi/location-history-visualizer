@@ -202,8 +202,6 @@ def main():
 
 
 	llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon = calculate_map_boundaries(loc_hist)
-	
-	## make layout here
 
 	m = create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, arguments.relief, width=arguments.width)
 	plot_points(m, loc_hist, arguments.relief)
