@@ -125,7 +125,7 @@ def plot_points(m, info, relief_bool, colorcode_list=None, title="Your Location 
 def choose_border_color(relief_bool):
 	if relief_bool:
 		return (0, 0, 0, 0.5)
-	return (0.816, 0.816, 0.816)
+	return (0.3, 0.3, 0.3, 0.5)
 
 
 def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, relief_bool, width, map_dpi=300):
@@ -142,7 +142,7 @@ def create_map(llcrnrlat, urcrnrlat, llcrnrlon, urcrnrlon, relief_bool, width, m
     country_col = choose_border_color(relief_bool)
     m.drawcountries(color=country_col)
 
-    m.fillcontinents(color=(0.972, 0.972, 0.972), lake_color='#FFFFFF', zorder=0)
+    m.fillcontinents(color=(0.9, 0.9, 0.9), lake_color='#FFFFFF', zorder=0)
     m.drawmapboundary(fill_color='#FFFFFF')
     
     return m
@@ -177,8 +177,8 @@ def main():
 						default=False)
 	parser.add_argument("-w", "--width", help="Width of your map in pixels. Enter an integer",
 						type=int, default=6000) # make it work!
-	parser.add_argument("-r", "--relief", help="Type 'True' if you want your map to show landscape features.",
-						type=bool, default=False)
+	parser.add_argument("-relief", help="Set if you want your map to show landscape features",
+						action='store_true')
 	arguments = parser.parse_args()
 
 
