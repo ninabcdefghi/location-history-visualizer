@@ -1,25 +1,43 @@
 # Location History Visualizer
-Simple Python CLI tool enabling anyone to visualize the location history that google maps collects - data most likely being collected [whether you want it or not](https://www.independent.co.uk/news/world/americas/google-location-data-privacy-android-sundar-pichai-a8490636.html).
 
-<img src="/outputexamples/basic_example.jpg" alt="output preview_basic" width="350" height="252"> <img src="/outputexamples/relief_example.jpg" alt="output preview_relief" width="350" height="252">
+![Location History Visualizer](https://imgur.com/a/rMLwfyn)
 
-# Installation
-```
-pip install -r requirements.txt
-```
+## Description
 
-# Basic Usage
-- First, [download your own location history here](https://takeout.google.com/) (deselect all, then select "Location History"). Download the archive and unzip the .json file.
-- Open your command line, go to the Location History Visualizer's path and type `python location-history-visualizer.py -i name_and_path_of_your.json`. This gives you a simple visualization of your data.
+**Location History Visualizer** is a command-line tool that creates simple maps from Google Location History data. It allows users to generate visualizations of their historical location data, providing insights into travel patterns and visitation frequency.
 
-# Optional Arguments
-- Relief: If the `-relief` is set, the output map will show landscape features. Takes a bit longer to generate.
-- Start date: `-s YYYY-MM-DD` lets you specify a date from which the visualization should be produced.
-- End date: `-e YYYY-MM-DD` sets an end date.
-- Width: `-w 6000` adjusts the width of the output image flexibly. Choose a higher integer for more detailed output, a lower for faster output.
-- Title: `-t CHOOSE TITLE` gives your map a custom title.
+## Features
 
-# Output
-The map can be used to [create detailed relief](/outputexamples/relief_big.jpg) or [schematic maps of your entire data](/outputexamples/basic_big.jpg) and to [visualize itineraries](/outputexamples/reliefdetail3.jpg).
+- Generate maps from Google Location History data.
+- Filter data by start and end dates.
+- Customize map title and width.
+- Landscape feature and high-resolution map options.
 
-![relief_big](/outputexamples/reliefdetail2.jpg)
+## Usage
+
+1. Clone the repository:
+
+   ```sh
+   git clone https://github.com/yourusername/location-history-visualizer.git
+   cd location-history-visualizer
+
+## Installation
+
+`$ pip install -r requirements.txt`
+## Basic Usage
+
+Run the script with the following command-line arguments
+`python Lctaion-Mapper.py -i Records.json -s 2022-01-01 -e 2022-12-31 -t "My Location History" -w 1200 -relief -highres`
+## Arguments
+* `-i` or `--infile:` Path to the JSON file downloaded from Google Takeout.
+* `-s` or `--startdate:` Start date in YYYY-MM-DD format for data filtering.
+* `-e` or `--enddate:` End date in YYYY-MM-DD format for data filtering.
+* `-t` or `--title:` Custom title for the Generated map
+* `-w` or `--width:` Map width in pixels (default: 6000)
+* `-relief:` Show landscape features on the map
+* `-highres:` Generate a high-resolution shaded relief map.
+## License
+This project is licensed under the [MIT](https://choosealicense.com/licenses/mit/) License. See the LICENSE file for details.
+## Acknowledgments
+* Inspired by the need to visualize personal location history data.
+* We appreciate the contributions and feedback from the open-source community
